@@ -1,0 +1,1631 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Gaming Library</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #050508;
+        --bg2: #0a0a12;
+        --bg3: #0f0f1a;
+        --surface: #12121f;
+        --surface2: #1a1a2e;
+        --border: rgba(255, 255, 255, 0.06);
+        --accent1: #00d4ff;
+        --accent2: #7c3aed;
+        --accent3: #f59e0b;
+        --done: #10b981;
+        --playing: #f59e0b;
+        --want: #6366f1;
+        --text: #e2e8f0;
+        --muted: #64748b;
+        --card-w: 180px;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* ── CANVAS BG ── */
+      #bg-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      /* ── HEADER ── */
+      header {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+        padding: 80px 40px 60px;
+      }
+
+      .hero-title {
+        font-family: "Orbitron", monospace;
+        font-size: clamp(2.5rem, 6vw, 5rem);
+        font-weight: 900;
+        background: linear-gradient(
+          135deg,
+          #00d4ff 0%,
+          #7c3aed 40%,
+          #f59e0b 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: 0.04em;
+        line-height: 1.1;
+        animation: titleGlow 4s ease-in-out infinite alternate;
+        text-shadow: none;
+      }
+
+      @keyframes titleGlow {
+        from {
+          filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
+        }
+        to {
+          filter: drop-shadow(0 0 40px rgba(124, 58, 237, 0.5));
+        }
+      }
+
+      .hero-sub {
+        font-family: "Rajdhani", sans-serif;
+        font-size: 1.1rem;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: 12px;
+      }
+
+      /* ── STATS BAR ── */
+      .stats-bar {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        flex-wrap: wrap;
+        margin-bottom: 60px;
+        padding: 0 40px;
+      }
+
+      .stat {
+        text-align: center;
+      }
+
+      .stat-num {
+        font-family: "Orbitron", monospace;
+        font-size: 2.2rem;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .stat-label {
+        font-family: "Rajdhani", sans-serif;
+        font-size: 0.75rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      .stat.done .stat-num {
+        color: var(--done);
+      }
+      .stat.playing .stat-num {
+        color: var(--playing);
+      }
+      .stat.want .stat-num {
+        color: var(--want);
+      }
+
+      /* ── SECTION ── */
+      .section {
+        position: relative;
+        z-index: 10;
+        padding: 0 40px 80px;
+        max-width: 1600px;
+        margin: 0 auto;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 36px;
+      }
+
+      .section-pill {
+        font-family: "Orbitron", monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 600;
+      }
+
+      .pill-done {
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--done);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+      .pill-playing {
+        background: rgba(245, 158, 11, 0.15);
+        color: var(--playing);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+      .pill-want {
+        background: rgba(99, 102, 241, 0.15);
+        color: var(--want);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+      }
+
+      .section-title {
+        font-family: "Rajdhani", sans-serif;
+        font-size: 1.8rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+      }
+
+      .section-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      /* ── GAME GRID ── */
+      .game-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(var(--card-w), 1fr));
+        gap: 20px;
+      }
+
+      /* ── GAME CARD ── */
+      .game-card {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        transform: translateZ(0);
+        transition:
+          transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+          box-shadow 0.3s ease;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        animation: cardIn 0.5s ease both;
+      }
+
+      @keyframes cardIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .game-card:hover {
+        transform: translateY(-8px) scale(1.03);
+        box-shadow:
+          0 24px 60px rgba(0, 0, 0, 0.7),
+          0 0 30px var(--glow, rgba(99, 102, 241, 0.3));
+        z-index: 5;
+      }
+
+      .game-card.done-card {
+        --glow: rgba(16, 185, 129, 0.25);
+      }
+      .game-card.playing-card {
+        --glow: rgba(245, 158, 11, 0.35);
+      }
+      .game-card.want-card {
+        --glow: rgba(99, 102, 241, 0.25);
+      }
+
+      .card-img-wrap {
+        width: 100%;
+        aspect-ratio: 3/4;
+        overflow: hidden;
+        position: relative;
+        background: var(--surface2);
+      }
+
+      .card-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.5s ease;
+        filter: brightness(0.85) saturate(1.1);
+      }
+
+      .game-card:hover .card-img-wrap img {
+        transform: scale(1.1);
+        filter: brightness(1) saturate(1.3);
+      }
+
+      .card-img-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--muted);
+      }
+      /* ── CARD DROPDOWN ── */
+      .status-dropdown {
+        margin-top: 10px;
+        width: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        padding: 6px 8px;
+        font-size: 0.75rem;
+        font-family: "Inter", sans-serif;
+        outline: none;
+        cursor: pointer;
+        backdrop-filter: blur(4px);
+        transition: border-color 0.2s;
+      }
+
+      .status-dropdown:hover,
+      .status-dropdown:focus {
+        border-color: var(--accent1);
+      }
+
+      .status-dropdown option {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      .card-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 12px 10px 10px;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.95));
+        transform: translateY(0);
+      }
+
+      .card-name {
+        font-family: "Rajdhani", sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.2;
+        color: #fff;
+        letter-spacing: 0.02em;
+      }
+
+      .card-genre {
+        font-size: 0.65rem;
+        color: var(--muted);
+        margin-top: 3px;
+        letter-spacing: 0.05em;
+      }
+
+      .card-status-dot {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 2px solid rgba(0, 0, 0, 0.4);
+      }
+
+      .dot-done {
+        background: var(--done);
+        box-shadow: 0 0 8px var(--done);
+      }
+      .dot-playing {
+        background: var(--playing);
+        box-shadow: 0 0 8px var(--playing);
+        animation: blink 1.5s ease-in-out infinite;
+      }
+      .dot-want {
+        background: var(--want);
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      /* ── CURRENTLY PLAYING FEATURED ── */
+      .playing-featured {
+        background: linear-gradient(
+          135deg,
+          rgba(245, 158, 11, 0.08) 0%,
+          rgba(245, 158, 11, 0.02) 100%
+        );
+        border: 1px solid rgba(245, 158, 11, 0.25);
+        border-radius: 20px;
+        padding: 30px;
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        margin-bottom: 36px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .playing-featured::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(
+          circle,
+          rgba(245, 158, 11, 0.1) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      .playing-featured-img {
+        width: 120px;
+        height: 160px;
+        object-fit: cover;
+        border-radius: 10px;
+        flex-shrink: 0;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      }
+
+      .playing-featured-info h2 {
+        font-family: "Orbitron", monospace;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--playing);
+        margin-bottom: 8px;
+      }
+
+      .playing-featured-info p {
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        max-width: 500px;
+      }
+
+      .now-playing-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(245, 158, 11, 0.15);
+        color: var(--playing);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 0.7rem;
+        font-family: "Orbitron", monospace;
+        letter-spacing: 0.1em;
+        margin-bottom: 12px;
+      }
+
+      .pulse-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--playing);
+        border-radius: 50%;
+        animation: blink 1.5s ease-in-out infinite;
+      }
+
+      /* ── ADD GAME MODAL ── */
+      .add-btn {
+        position: fixed;
+        bottom: 40px;
+        right: 40px;
+        z-index: 100;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent2), var(--accent1));
+        border: none;
+        cursor: pointer;
+        font-size: 2rem;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 30px rgba(124, 58, 237, 0.5);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .add-btn:hover {
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 12px 40px rgba(124, 58, 237, 0.7);
+      }
+
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+
+      .modal-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .modal {
+        background: var(--surface2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 40px;
+        width: 90%;
+        max-width: 480px;
+        transform: translateY(20px) scale(0.95);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      .modal-overlay.open .modal {
+        transform: translateY(0) scale(1);
+      }
+
+      .modal h2 {
+        font-family: "Orbitron", monospace;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--accent1);
+        margin-bottom: 24px;
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+        color: var(--text);
+        font-family: "Inter", sans-serif;
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        border-color: var(--accent1);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+      }
+
+      .form-group select option {
+        background: var(--surface2);
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .btn-primary {
+        flex: 1;
+        padding: 12px;
+        background: linear-gradient(135deg, var(--accent2), var(--accent1));
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-family: "Rajdhani", sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition:
+          opacity 0.2s,
+          transform 0.1s;
+      }
+
+      .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+
+      .btn-secondary {
+        padding: 12px 24px;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--muted);
+        font-family: "Rajdhani", sans-serif;
+        font-size: 1rem;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          color 0.2s;
+      }
+
+      .btn-secondary:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: var(--text);
+      }
+
+      /* ── SCROLLBAR ── */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--surface2);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--muted);
+      }
+
+      /* ── SEARCH / FILTER BAR ── */
+      .filter-bar {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 0 40px 48px;
+      }
+
+      .filter-btn {
+        padding: 8px 20px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        font-family: "Rajdhani", sans-serif;
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .filter-btn:hover,
+      .filter-btn.active {
+        background: var(--surface2);
+        color: var(--text);
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+
+      .search-wrap {
+        position: relative;
+      }
+
+      .search-input {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 8px 18px 8px 38px;
+        color: var(--text);
+        font-family: "Inter", sans-serif;
+        font-size: 0.85rem;
+        width: 220px;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          width 0.3s;
+      }
+
+      .search-input:focus {
+        border-color: rgba(0, 212, 255, 0.4);
+        width: 280px;
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        font-size: 14px;
+        pointer-events: none;
+      }
+
+      /* ── 3D ROTATING ICON ── */
+      .hero-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 24px;
+        position: relative;
+        perspective: 400px;
+      }
+
+      .cube {
+        width: 80px;
+        height: 80px;
+        position: relative;
+        transform-style: preserve-3d;
+        animation: rotateCube 8s linear infinite;
+      }
+
+      @keyframes rotateCube {
+        from {
+          transform: rotateX(15deg) rotateY(0deg);
+        }
+        to {
+          transform: rotateX(15deg) rotateY(360deg);
+        }
+      }
+
+      .cube-face {
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        backdrop-filter: blur(4px);
+      }
+
+      .cf-front {
+        background: rgba(99, 102, 241, 0.3);
+        transform: translateZ(40px);
+      }
+      .cf-back {
+        background: rgba(0, 212, 255, 0.3);
+        transform: rotateY(180deg) translateZ(40px);
+      }
+      .cf-left {
+        background: rgba(245, 158, 11, 0.3);
+        transform: rotateY(-90deg) translateZ(40px);
+      }
+      .cf-right {
+        background: rgba(16, 185, 129, 0.3);
+        transform: rotateY(90deg) translateZ(40px);
+      }
+      .cf-top {
+        background: rgba(124, 58, 237, 0.3);
+        transform: rotateX(90deg) translateZ(40px);
+      }
+      .cf-bottom {
+        background: rgba(239, 68, 68, 0.3);
+        transform: rotateX(-90deg) translateZ(40px);
+      }
+
+      /* ── NO GAMES PLACEHOLDER ── */
+      .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 40px;
+        color: var(--muted);
+        font-family: "Rajdhani", sans-serif;
+        font-size: 1rem;
+        letter-spacing: 0.1em;
+      }
+
+      /* ── TOOLTIP ── */
+      .game-card:hover::after {
+        opacity: 1;
+      }
+
+      /* stagger animation */
+      .game-card:nth-child(1) {
+        animation-delay: 0.02s;
+      }
+      .game-card:nth-child(2) {
+        animation-delay: 0.04s;
+      }
+      .game-card:nth-child(3) {
+        animation-delay: 0.06s;
+      }
+      .game-card:nth-child(4) {
+        animation-delay: 0.08s;
+      }
+      .game-card:nth-child(5) {
+        animation-delay: 0.1s;
+      }
+      .game-card:nth-child(6) {
+        animation-delay: 0.12s;
+      }
+      .game-card:nth-child(7) {
+        animation-delay: 0.14s;
+      }
+      .game-card:nth-child(8) {
+        animation-delay: 0.16s;
+      }
+      .game-card:nth-child(9) {
+        animation-delay: 0.18s;
+      }
+      .game-card:nth-child(10) {
+        animation-delay: 0.2s;
+      }
+
+      /* section divider */
+      .divider {
+        position: relative;
+        z-index: 10;
+        height: 1px;
+        background: var(--border);
+        margin: 20px 40px 60px;
+      }
+      /* ── STATUS CHANGE MODAL ── */
+      #status-modal-overlay {
+        backdrop-filter: blur(12px); /* Extra blur for dramatic effect */
+      }
+
+      .status-options {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .status-btn {
+        padding: 18px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: white;
+        font-family: "Orbitron", monospace;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition:
+          transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+          box-shadow 0.3s ease,
+          border-color 0.3s ease;
+      }
+
+      .status-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 0.3s;
+        z-index: 0;
+      }
+
+      .status-btn span {
+        position: relative;
+        z-index: 1;
+      }
+
+      .status-btn:hover {
+        transform: scale(1.03);
+      }
+
+      .want-btn:hover {
+        border-color: var(--want);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+      }
+      .want-btn:hover::before {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(99, 102, 241, 0.15),
+          transparent
+        );
+        opacity: 1;
+      }
+
+      .playing-btn:hover {
+        border-color: var(--playing);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+      }
+      .playing-btn:hover::before {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(245, 158, 11, 0.15),
+          transparent
+        );
+        opacity: 1;
+      }
+
+      .done-btn:hover {
+        border-color: var(--done);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+      }
+      .done-btn:hover::before {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(16, 185, 129, 0.15),
+          transparent
+        );
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- HEADER -->
+    <header>
+      <div class="hero-icon">
+        <div class="cube">
+          <div class="cube-face cf-front">🎮</div>
+          <div class="cube-face cf-back">⚔️</div>
+          <div class="cube-face cf-left">🏆</div>
+          <div class="cube-face cf-right">🌍</div>
+          <div class="cube-face cf-top">💀</div>
+          <div class="cube-face cf-bottom">🔥</div>
+        </div>
+      </div>
+      <h1 class="hero-title">My Gaming Library</h1>
+      <p class="hero-sub">
+        Every world I've conquered &amp; every battle ahead
+      </p>
+    </header>
+
+    <!-- STATS -->
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat done">
+        <div class="stat-num" id="count-done">0</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat playing">
+        <div class="stat-num" id="count-playing">0</div>
+        <div class="stat-label">Now Playing</div>
+      </div>
+      <div class="stat want">
+        <div class="stat-num" id="count-want">0</div>
+        <div class="stat-label">Want to Play</div>
+      </div>
+    </div>
+
+    <!-- FILTER / SEARCH -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input
+          class="search-input"
+          id="search-input"
+          type="text"
+          placeholder="Search games..."
+        />
+      </div>
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="done">Completed</button>
+      <button class="filter-btn" data-filter="playing">Playing</button>
+      <button class="filter-btn" data-filter="want">Want to Play</button>
+    </div>
+
+    <!-- CURRENTLY PLAYING -->
+    <div class="section" id="section-playing">
+      <div class="section-header">
+        <span class="section-pill pill-playing">● Now Playing</span>
+        <h2 class="section-title">Currently Playing</h2>
+        <div class="section-line"></div>
+      </div>
+
+      <div class="playing-featured" id="featured-playing">
+        <img
+          class="playing-featured-img"
+          id="featured-img"
+          src="https://image.api.playstation.com/vulcan/ap/rnd/202108/1613/4RRPSZEv7mRGbSS5MXFe28qT.png"
+          onerror="
+            this.src =
+              'https://via.placeholder.com/120x160/1a1a2e/64748b?text=🎮'
+          "
+          alt="Elden Ring"
+        />
+        <div class="playing-featured-info">
+          <div class="now-playing-badge">
+            <span class="pulse-dot"></span> CURRENTLY PLAYING
+          </div>
+          <h2 id="featured-name">Elden Ring</h2>
+          <p id="featured-desc">
+            An open-world action RPG from FromSoftware and George R.R. Martin.
+            Explore the Lands Between, master brutal combat, and uncover the
+            shattered mysteries of the Elden Ring.
+          </p>
+        </div>
+      </div>
+
+      <div class="game-grid" id="grid-playing"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- COMPLETED -->
+    <div class="section" id="section-done">
+      <div class="section-header">
+        <span class="section-pill pill-done">✓ Completed</span>
+        <h2 class="section-title">Completed Games</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="game-grid" id="grid-done"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- WANT TO PLAY -->
+    <div class="section" id="section-want">
+      <div class="section-header">
+        <span class="section-pill pill-want">◆ Backlog</span>
+        <h2 class="section-title">Want to Play</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="game-grid" id="grid-want"></div>
+    </div>
+
+    <!-- ADD GAME BUTTON -->
+    <button class="add-btn" id="open-modal" title="Add a game">+</button>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal">
+        <h2>+ Add New Game</h2>
+        <div class="form-group">
+          <label>Game Title</label>
+          <input type="text" id="new-title" placeholder="e.g. Hollow Knight" />
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="new-status">
+            <option value="want">Want to Play</option>
+            <option value="playing">Currently Playing</option>
+            <option value="done">Completed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Genre</label>
+          <input type="text" id="new-genre" placeholder="e.g. Action RPG" />
+        </div>
+        <div class="form-group">
+          <label>Cover Image URL (optional)</label>
+          <input type="text" id="new-img" placeholder="https://..." />
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="close-modal">Cancel</button>
+          <button class="btn-primary" id="add-game-btn">Add Game</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="status-modal-overlay">
+      <div class="modal status-modal">
+        <h2
+          id="status-modal-title"
+          style="color: white; text-align: center; margin-bottom: 30px"
+        >
+          Game Title
+        </h2>
+        <div class="status-options">
+          <button class="status-btn want-btn" data-status="want">
+            <span>◆ Want to Play</span>
+          </button>
+          <button class="status-btn playing-btn" data-status="playing">
+            <span>● Currently Playing</span>
+          </button>
+          <button class="status-btn done-btn" data-status="done">
+            <span>✓ Completed</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ── GAME DATA ──
+      const IGDB_COVERS = {
+        // Done
+        "Resident Evil 2 Remake":
+          "https://upload.wikimedia.org/wikipedia/en/f/fd/Resident_Evil_2_Remake.jpg",
+        "Resident Evil 3 Remake":
+          "https://upload.wikimedia.org/wikipedia/en/d/dc/Resident_Evil_3.jpg",
+        "Resident Evil 4 Remake":
+          "https://upload.wikimedia.org/wikipedia/en/thumb/d/df/Resident_Evil_4_remake_cover_art.jpg/250px-Resident_Evil_4_remake_cover_art.jpg",
+        "Dark Souls Remastered":
+          "https://upload.wikimedia.org/wikipedia/en/8/8d/Dark_Souls_Cover_Art.jpg",
+        "Dark Souls 2":
+          "https://upload.wikimedia.org/wikipedia/en/e/ed/Dark_Souls_II_cover.jpg",
+        "Hollow Knight":
+          "https://upload.wikimedia.org/wikipedia/en/d/de/Hollow_Knight_2026_cover_art.jpg",
+        "The Last of Us Part 1":
+          "https://upload.wikimedia.org/wikipedia/en/8/86/The_Last_of_Us_Part_I_cover.jpg",
+        "GTA V":
+          "https://upload.wikimedia.org/wikipedia/en/a/a5/Grand_Theft_Auto_V.png",
+
+        // Playing
+        "Elden Ring":
+          "https://upload.wikimedia.org/wikipedia/en/b/b9/Elden_Ring_Box_art.jpg",
+
+        // Want
+        "Dark Souls 3":
+          "https://upload.wikimedia.org/wikipedia/en/b/bb/Dark_souls_3_cover_art.jpg",
+        Sekiro: "https://upload.wikimedia.org/wikipedia/en/6/6e/Sekiro_art.jpg",
+        "Black Myth: Wukong":
+          "https://upload.wikimedia.org/wikipedia/en/a/a6/Black_Myth_Wukong_cover_art.jpg",
+        "Lies of P":
+          "https://upload.wikimedia.org/wikipedia/en/d/de/Lies_of_p_cover_art.jpg",
+        "The Last of Us Part 2":
+          "https://upload.wikimedia.org/wikipedia/en/thumb/4/4f/TLOU_P2_Box_Art_2.png/250px-TLOU_P2_Box_Art_2.png",
+        "Ghost of Tsushima":
+          "https://upload.wikimedia.org/wikipedia/en/b/b6/Ghost_of_Tsushima.jpg",
+        "God of War (2018)":
+          "https://upload.wikimedia.org/wikipedia/en/a/a7/God_of_War_4_cover.jpg",
+        "God of War Ragnarök":
+          "https://upload.wikimedia.org/wikipedia/en/e/ee/God_of_War_Ragnar%C3%B6k_cover.jpg",
+        "The Witcher 3":
+          "https://upload.wikimedia.org/wikipedia/en/0/0c/Witcher_3_cover_art.jpg",
+        "Red Dead Redemption 2":
+          "https://upload.wikimedia.org/wikipedia/en/4/44/Red_Dead_Redemption_II.jpg",
+        "Cyberpunk 2077":
+          "https://upload.wikimedia.org/wikipedia/en/9/9f/Cyberpunk_2077_box_art.jpg",
+        "Horizon Forbidden West":
+          "https://upload.wikimedia.org/wikipedia/en/6/69/Horizon_Forbidden_West_cover_art.jpg",
+        "Horizon Zero Dawn":
+          "https://upload.wikimedia.org/wikipedia/en/3/3e/Horizon_Zero_Dawn_cover_art.jpg",
+        "Detroit: Become Human":
+          "https://upload.wikimedia.org/wikipedia/en/e/ee/Detroit_Become_Human.jpg",
+        "Spider-Man 2":
+          "https://upload.wikimedia.org/wikipedia/en/0/0f/SpiderMan2PS5BoxArt.jpeg",
+        "Alan Wake 2":
+          "https://upload.wikimedia.org/wikipedia/en/e/ed/Alan_Wake_2_box_art.jpg",
+        "Resident Evil 7":
+          "https://upload.wikimedia.org/wikipedia/en/f/fd/Resident_Evil_7_cover_art.jpg",
+        "Resident Evil Village":
+          "https://upload.wikimedia.org/wikipedia/en/2/2c/Resident_Evil_Village.png",
+        "Uncharted 2":
+          "https://upload.wikimedia.org/wikipedia/en/7/7b/Uncharted_2_box_artwork.jpg",
+        "Uncharted 3":
+          "https://upload.wikimedia.org/wikipedia/en/0/02/Uncharted_3_Boxart.jpg",
+        "Uncharted 4":
+          "https://upload.wikimedia.org/wikipedia/en/1/1a/Uncharted_4_box_artwork.jpg",
+        "Silent Hill 2 Remake":
+          "https://upload.wikimedia.org/wikipedia/en/thumb/c/c1/Silent_Hill_2_remake_cover.jpg/250px-Silent_Hill_2_remake_cover.jpg",
+        "A Plague Tale: Innocence":
+          "https://upload.wikimedia.org/wikipedia/en/1/1d/A_Plague_Tale_cover_art.jpg",
+        "A Plague Tale: Requiem":
+          "https://upload.wikimedia.org/wikipedia/en/a/ae/A_Plague_Tale_Requiem_cover_art.jpg",
+        "Clair Obscur: Expedition 33":
+          "https://upload.wikimedia.org/wikipedia/en/5/5a/Clair_Obscur%2C_Expedition_33_Cover_1.webp",
+        Stray:
+          "https://upload.wikimedia.org/wikipedia/en/f/f1/Stray_cover_art.jpg",
+        "Hitman: World of Assassination":
+          "https://mlpnk72yciwc.i.optimole.com/cqhiHLc.IIZS~2ef73/w:auto/h:auto/q:75/https://bleedingcool.com/wp-content/uploads/2023/01/Hitman-World-Of-Assasination-Art-1.jpg",
+        "Assassin's Creed II":
+          "https://upload.wikimedia.org/wikipedia/en/thumb/7/77/Assassins_Creed_2_Box_Art.JPG/250px-Assassins_Creed_2_Box_Art.JPG",
+        "Assassin's Creed Brotherhood":
+          "https://upload.wikimedia.org/wikipedia/en/2/2a/Assassins_Creed_brotherhood_cover.jpg",
+        "Assassin's Creed Revelations":
+          "https://upload.wikimedia.org/wikipedia/en/thumb/d/d9/Assassins_Creed_Revelations_Cover.jpg/250px-Assassins_Creed_Revelations_Cover.jpg",
+        "Assassin's Creed III":
+          "https://upload.wikimedia.org/wikipedia/en/thumb/2/29/Assassin%27s_Creed_III_Game_Cover.jpg/250px-Assassin%27s_Creed_III_Game_Cover.jpg",
+        "Assassin's Creed IV: Black Flag":
+          "https://upload.wikimedia.org/wikipedia/en/2/28/Assassin%27s_Creed_IV_-_Black_Flag_cover.jpg",
+        "Assassin's Creed Rogue":
+          "https://upload.wikimedia.org/wikipedia/en/a/ae/Assassin%27s_Creed_Rogue.jpg",
+        "Assassin's Creed Unity":
+          "https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Assassin%27s_Creed_Unity_cover.jpg/250px-Assassin%27s_Creed_Unity_cover.jpg",
+        "Assassin's Creed Syndicate":
+          "https://upload.wikimedia.org/wikipedia/en/f/f2/Assassin%27s_Creed_Syndicate_cover.jpg",
+        "Assassin's Creed Origins":
+          "https://upload.wikimedia.org/wikipedia/en/4/4a/Assassin%27s_Creed_Origins_Cover_Art.png",
+        "Assassin's Creed Odyssey":
+          "https://upload.wikimedia.org/wikipedia/en/thumb/9/99/ACOdysseyCoverArt.png/250px-ACOdysseyCoverArt.png",
+        "Assassin's Creed Valhalla":
+          "https://upload.wikimedia.org/wikipedia/en/thumb/f/ff/Assassin%27s_Creed_Valhalla_cover.jpg/250px-Assassin%27s_Creed_Valhalla_cover.jpg",
+        "Assassin's Creed Mirage":
+          "https://upload.wikimedia.org/wikipedia/en/2/23/Assassin%27s_Creed_Mirage_cover.jpeg",
+        "Rise of the Tomb Raider":
+          "https://upload.wikimedia.org/wikipedia/en/2/29/Rise_of_the_Tomb_Raider.jpg",
+        "Hellblade II":
+          "https://upload.wikimedia.org/wikipedia/en/thumb/e/ed/Senua%27s_Saga_Hellblade_II_cover_art.png/250px-Senua%27s_Saga_Hellblade_II_cover_art.png",
+        "Lords of the Fallen (2023)":
+          "https://lotf2-space.lon1.cdn.digitaloceanspaces.com/78a14406acc5083d31b063540dd47522.webp",
+        "Crimson Desert":
+          "https://image.api.playstation.com/vulcan/ap/rnd/202508/2905/0a3fc6d3f858e52566fe0390b13387a29243ddeecc70293f.png",
+        "Ghost of Yōtei":
+          "https://upload.wikimedia.org/wikipedia/en/thumb/1/18/Ghost_of_Y%C5%8Dtei_cover_art.png/250px-Ghost_of_Y%C5%8Dtei_cover_art.png",
+        "Wuchang: Fallen Feathers":
+          "https://upload.wikimedia.org/wikipedia/en/c/c4/Wuchang_Fallen_Feathers_cover_art.jpg",
+        Crowsworn:
+          "https://assets-prd.ignimgs.com/2022/07/11/crowsworn-button-1657557014196.jpg",
+        "Where Winds Meet":
+          "https://upload.wikimedia.org/wikipedia/en/4/43/Where_Winds_Meet_cover_art.jpg",
+        "Resident Evil Requiem":
+          "https://upload.wikimedia.org/wikipedia/en/1/15/Resident_Evil_Requiem_Cover_Art.jpg",
+      };
+
+      const GENRES = {
+        "Ghost of Yōtei": "Open World Action",
+        "Elden Ring": "Action RPG",
+        "Dark Souls 3": "Action RPG",
+        Sekiro: "Action RPG",
+        "Black Myth: Wukong": "Action RPG",
+        "Wuchang: Fallen Feathers": "Action RPG",
+        "Lies of P": "Soulslike RPG",
+        "The Last of Us Part 2": "Action Adventure",
+        "Ghost of Tsushima": "Open World Action",
+        "God of War (2018)": "Action Adventure",
+        "God of War Ragnarök": "Action Adventure",
+        "The Witcher 3": "Open World RPG",
+        "Red Dead Redemption 2": "Open World Adventure",
+        "Cyberpunk 2077": "Open World RPG",
+        "Horizon Forbidden West": "Open World Action RPG",
+        "Horizon Zero Dawn": "Open World Action RPG",
+        "Detroit: Become Human": "Narrative Adventure",
+        "Spider-Man 2": "Action Adventure",
+        "Alan Wake 2": "Survival Horror",
+        "Where Winds Meet": "Action RPG",
+        Crowsworn: "Soulslike RPG",
+        "Resident Evil 7": "Survival Horror",
+        "Resident Evil Village": "Survival Horror",
+        "Resident Evil 2 Remake": "Survival Horror",
+        "Resident Evil 3 Remake": "Survival Horror",
+        "Resident Evil 4 Remake": "Survival Horror",
+        "Resident Evil Requiem": "Survival Horror",
+        "Dark Souls Remastered": "Action RPG",
+        "Dark Souls 2": "Action RPG",
+        "Hollow Knight": "Metroidvania",
+        "The Last of Us Part 1": "Action Adventure",
+        "GTA V": "Open World Action",
+        "Uncharted 2": "Action Adventure",
+        "Uncharted 3": "Action Adventure",
+        "Uncharted 4": "Action Adventure",
+        "Silent Hill 2 Remake": "Survival Horror",
+        "A Plague Tale: Innocence": "Stealth Adventure",
+        "A Plague Tale: Requiem": "Stealth Adventure",
+        "Clair Obscur: Expedition 33": "Turn-Based RPG",
+        Stray: "Adventure",
+        "Hitman: World of Assassination": "Stealth",
+        "Assassin's Creed II": "Action Adventure",
+        "Assassin's Creed Brotherhood": "Action Adventure",
+        "Assassin's Creed Revelations": "Action Adventure",
+        "Assassin's Creed III": "Action Adventure",
+        "Assassin's Creed IV: Black Flag": "Action Adventure",
+        "Assassin's Creed Rogue": "Action Adventure",
+        "Assassin's Creed Unity": "Action Adventure",
+        "Assassin's Creed Syndicate": "Action Adventure",
+        "Assassin's Creed Origins": "Action RPG",
+        "Assassin's Creed Odyssey": "Action RPG",
+        "Assassin's Creed Valhalla": "Action RPG",
+        "Assassin's Creed Mirage": "Stealth Action",
+        "Rise of the Tomb Raider": "Action Adventure",
+        "Hellblade II": "Action Adventure",
+        "Lords of the Fallen (2023)": "Soulslike RPG",
+        "Crimson Desert": "Open World Action RPG",
+      };
+
+      let GAMES = {
+        done: [
+          { id: 1, title: "Resident Evil 2 Remake" },
+          { id: 2, title: "Resident Evil 3 Remake" },
+          { id: 3, title: "Resident Evil 4 Remake" },
+          { id: 4, title: "Dark Souls Remastered" },
+          { id: 5, title: "Dark Souls 2" },
+          { id: 6, title: "Hollow Knight" },
+          { id: 7, title: "The Last of Us Part 1" },
+          { id: 8, title: "GTA V" },
+        ],
+        playing: [{ id: 9, title: "Elden Ring" }],
+        want: [
+          { id: 10, title: "Dark Souls 3" },
+          { id: 11, title: "Sekiro" },
+          { id: 12, title: "Black Myth: Wukong" },
+          { id: 13, title: "Wuchang: Fallen Feathers" },
+          { id: 14, title: "Lies of P" },
+          { id: 15, title: "The Last of Us Part 2" },
+          { id: 16, title: "Ghost of Tsushima" },
+          { id: 17, title: "Ghost of Yōtei" },
+          { id: 18, title: "God of War (2018)" },
+          { id: 19, title: "God of War Ragnarök" },
+          { id: 20, title: "The Witcher 3" },
+          { id: 21, title: "Red Dead Redemption 2" },
+          { id: 22, title: "Cyberpunk 2077" },
+          { id: 23, title: "Horizon Forbidden West" },
+          { id: 24, title: "Horizon Zero Dawn" },
+          { id: 25, title: "Detroit: Become Human" },
+          { id: 26, title: "Spider-Man 2" },
+          { id: 27, title: "Alan Wake 2" },
+          { id: 28, title: "Where Winds Meet" },
+          { id: 29, title: "Lords of the Fallen (2023)" },
+          { id: 30, title: "Crowsworn" },
+          { id: 31, title: "Hellblade II" },
+          { id: 32, title: "Resident Evil 7" },
+          { id: 33, title: "Resident Evil Village" },
+          { id: 34, title: "Resident Evil Requiem" },
+          { id: 35, title: "Uncharted 2" },
+          { id: 36, title: "Uncharted 3" },
+          { id: 37, title: "Uncharted 4" },
+          { id: 38, title: "Silent Hill 2 Remake" },
+          { id: 39, title: "A Plague Tale: Innocence" },
+          { id: 40, title: "A Plague Tale: Requiem" },
+          { id: 41, title: "Clair Obscur: Expedition 33" },
+          { id: 42, title: "Stray" },
+          { id: 43, title: "Hitman: World of Assassination" },
+          { id: 44, title: "Assassin's Creed II" },
+          { id: 45, title: "Assassin's Creed Brotherhood" },
+          { id: 46, title: "Assassin's Creed Revelations" },
+          { id: 47, title: "Assassin's Creed III" },
+          { id: 48, title: "Assassin's Creed IV: Black Flag" },
+          { id: 49, title: "Assassin's Creed Rogue" },
+          { id: 50, title: "Assassin's Creed Unity" },
+          { id: 51, title: "Assassin's Creed Syndicate" },
+          { id: 52, title: "Assassin's Creed Origins" },
+          { id: 53, title: "Assassin's Creed Odyssey" },
+          { id: 54, title: "Assassin's Creed Valhalla" },
+          { id: 55, title: "Assassin's Creed Mirage" },
+          { id: 56, title: "Rise of the Tomb Raider" },
+          { id: 57, title: "Crimson Desert" },
+        ],
+      };
+
+      let nextId = 100;
+      let activeFilter = "all";
+      let searchQuery = "";
+      // ── STATUS MODAL LOGIC ──
+      let currentEditingGameId = null;
+      let currentEditingGameStatus = null;
+
+      function openStatusModal(id, title, currentStatus) {
+        currentEditingGameId = id;
+        currentEditingGameStatus = currentStatus;
+        document.getElementById("status-modal-title").textContent = title;
+        document.getElementById("status-modal-overlay").classList.add("open");
+      }
+
+      function closeStatusModal() {
+        document
+          .getElementById("status-modal-overlay")
+          .classList.remove("open");
+        currentEditingGameId = null;
+        currentEditingGameStatus = null;
+      }
+
+      // Listen for clicks on the new status buttons
+      document.querySelectorAll(".status-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const newStatus = e.currentTarget.dataset.status;
+
+          if (
+            newStatus !== currentEditingGameStatus &&
+            currentEditingGameId !== null
+          ) {
+            changeGameStatus(
+              currentEditingGameId,
+              currentEditingGameStatus,
+              newStatus,
+            );
+          }
+
+          closeStatusModal();
+        });
+      });
+
+      // Close the modal if you click the blurred background
+      document
+        .getElementById("status-modal-overlay")
+        .addEventListener("click", (e) => {
+          if (e.target === document.getElementById("status-modal-overlay")) {
+            closeStatusModal();
+          }
+        });
+
+      function getImg(title) {
+        return IGDB_COVERS[title] || null;
+      }
+      function getGenre(title) {
+        return GENRES[title] || "Action";
+      }
+
+      function makeCard(game, status) {
+        const img = getImg(game.title);
+        const genre = game.genre || getGenre(game.title);
+        const card = document.createElement("div");
+        card.className = `game-card ${status}-card`;
+        card.dataset.title = game.title.toLowerCase();
+        card.dataset.status = status;
+
+        const dotClass = `dot-${status}`;
+        const imgHtml = img
+          ? `<img src="${img}" alt="${game.title}" onerror="this.parentElement.innerHTML='<div class=\\'card-img-placeholder\\'>🎮</div>'">`
+          : `<div class="card-img-placeholder">🎮</div>`;
+
+        card.innerHTML = `
+          <div class="card-img-wrap">${imgHtml}</div>
+          <div class="card-status-dot ${dotClass}"></div>
+          <div class="card-overlay">
+            <div class="card-name">${game.title}</div>
+            <div class="card-genre">${genre}</div>
+          </div>
+        `;
+
+        // Trigger the new modal when the card is clicked
+        card.onclick = () => openStatusModal(game.id, game.title, status);
+
+        return card;
+      }
+      function changeGameStatus(gameId, oldStatus, newStatus) {
+        if (oldStatus === newStatus) return; // Do nothing if it's the same status
+
+        // 1. Find the exact game in the old status list
+        const gameIndex = GAMES[oldStatus].findIndex((g) => g.id === gameId);
+
+        if (gameIndex > -1) {
+          // 2. Remove it from the old list
+          const gameToMove = GAMES[oldStatus].splice(gameIndex, 1)[0];
+
+          // 3. Add it to the new list
+          GAMES[newStatus].push(gameToMove);
+
+          // 4. Re-render the UI so the card visually moves
+          render();
+        }
+      }
+      function render() {
+        const q = searchQuery.toLowerCase();
+        ["done", "playing", "want"].forEach((status) => {
+          const grid = document.getElementById(`grid-${status}`);
+          grid.innerHTML = "";
+          const filtered = GAMES[status].filter((g) => {
+            const matchStatus =
+              activeFilter === "all" || activeFilter === status;
+            const matchSearch = !q || g.title.toLowerCase().includes(q);
+            return matchStatus && matchSearch;
+          });
+
+          const sectionEl = document.getElementById(`section-${status}`);
+          if (activeFilter !== "all" && activeFilter !== status) {
+            sectionEl.style.display = "none";
+            document
+              .querySelectorAll(".divider")
+              .forEach((d) => (d.style.display = ""));
+            return;
+          }
+          sectionEl.style.display = "";
+
+          if (filtered.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "empty-state";
+            empty.textContent = q
+              ? "No games found matching your search."
+              : "No games here yet.";
+            grid.appendChild(empty);
+          } else {
+            filtered.forEach((g) => grid.appendChild(makeCard(g, status)));
+          }
+        });
+
+        // Update counts
+        document.getElementById("count-done").textContent = GAMES.done.length;
+        document.getElementById("count-playing").textContent =
+          GAMES.playing.length;
+        document.getElementById("count-want").textContent = GAMES.want.length;
+        // Update the Featured Game Banner dynamically
+        const featuredEl = document.getElementById("featured-playing");
+        if (GAMES.playing.length > 0) {
+          featuredEl.style.display = "flex";
+          const topGame = GAMES.playing[0]; // Grabs the first game in your Playing array
+          document.getElementById("featured-name").textContent = topGame.title;
+          document.getElementById("featured-img").src =
+            getImg(topGame.title) ||
+            "https://via.placeholder.com/120x160/1a1a2e/64748b?text=🎮";
+          document.getElementById("featured-desc").textContent =
+            `Currently playing ${topGame.title}. Dive back in and continue your journey!`;
+        } else {
+          featuredEl.style.display = "none"; // Hide if nothing is currently being played
+        }
+      }
+
+      // FILTER BUTTONS
+      document.querySelectorAll(".filter-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".filter-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          activeFilter = btn.dataset.filter;
+          render();
+        });
+      });
+
+      // SEARCH
+      document.getElementById("search-input").addEventListener("input", (e) => {
+        searchQuery = e.target.value;
+        render();
+      });
+
+      // MODAL
+      document.getElementById("open-modal").addEventListener("click", () => {
+        document.getElementById("modal-overlay").classList.add("open");
+      });
+      document.getElementById("close-modal").addEventListener("click", () => {
+        document.getElementById("modal-overlay").classList.remove("open");
+      });
+      document
+        .getElementById("modal-overlay")
+        .addEventListener("click", (e) => {
+          if (e.target === document.getElementById("modal-overlay")) {
+            document.getElementById("modal-overlay").classList.remove("open");
+          }
+        });
+      document.getElementById("add-game-btn").addEventListener("click", () => {
+        const title = document.getElementById("new-title").value.trim();
+        const status = document.getElementById("new-status").value;
+        const genre = document.getElementById("new-genre").value.trim();
+        const img = document.getElementById("new-img").value.trim();
+        if (!title) {
+          document.getElementById("new-title").focus();
+          return;
+        }
+        GAMES[status].push({
+          id: nextId++,
+          title,
+          genre: genre || "Action",
+          img: img || null,
+        });
+        // Override img if provided
+        if (img) IGDB_COVERS[title] = img;
+        if (genre) GENRES[title] = genre;
+        render();
+        document.getElementById("modal-overlay").classList.remove("open");
+        document.getElementById("new-title").value = "";
+        document.getElementById("new-genre").value = "";
+        document.getElementById("new-img").value = "";
+      });
+
+      // INITIAL RENDER
+      render();
+
+      // ── PARTICLE BACKGROUND CANVAS ──
+      const canvas = document.getElementById("bg-canvas");
+      const ctx = canvas.getContext("2d");
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener("resize", resize);
+
+      const COLORS = ["#00d4ff", "#7c3aed", "#f59e0b", "#10b981", "#6366f1"];
+      const particles = Array.from({ length: 70 }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 1.5 + 0.3,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        alpha: Math.random() * 0.5 + 0.1,
+      }));
+
+      const lines = Array.from({ length: 8 }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        len: Math.random() * 200 + 100,
+        angle: Math.random() * Math.PI,
+        speed: (Math.random() - 0.5) * 0.2,
+        alpha: Math.random() * 0.06 + 0.02,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      }));
+
+      function drawBg() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // subtle grid
+        ctx.strokeStyle = "rgba(255,255,255,0.02)";
+        ctx.lineWidth = 1;
+        const gs = 80;
+        for (let x = 0; x < canvas.width; x += gs) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += gs) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
+
+        // moving lines
+        lines.forEach((l) => {
+          l.angle += l.speed * 0.01;
+          ctx.save();
+          ctx.translate(l.x, l.y);
+          ctx.rotate(l.angle);
+          ctx.strokeStyle = l.color;
+          ctx.globalAlpha = l.alpha;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-l.len / 2, 0);
+          ctx.lineTo(l.len / 2, 0);
+          ctx.stroke();
+          ctx.restore();
+        });
+
+        // particles
+        particles.forEach((p) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0) p.x = canvas.width;
+          if (p.x > canvas.width) p.x = 0;
+          if (p.y < 0) p.y = canvas.height;
+          if (p.y > canvas.height) p.y = 0;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.alpha;
+          ctx.fill();
+        });
+
+        ctx.globalAlpha = 1;
+
+        // draw connections between nearby particles
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
+              ctx.strokeStyle = particles[i].color;
+              ctx.globalAlpha = (1 - dist / 120) * 0.06;
+              ctx.lineWidth = 0.5;
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        requestAnimationFrame(drawBg);
+      }
+      drawBg();
+    </script>
+  </body>
+</html>
