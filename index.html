@@ -1358,14 +1358,14 @@
         });
 
       function getImg(title) {
-        return IGDB_COVERS[title] || null;
+        return game.img || IGDB_COVERS[title] || null;
       }
       function getGenre(title) {
         return GENRES[title] || "Action";
       }
 
       function makeCard(game, status) {
-        const img = getImg(game.title);
+        const img = getImg(game);
         const genre = game.genre || getGenre(game.title);
         const card = document.createElement("div");
         card.className = `game-card ${status}-card`;
@@ -1454,7 +1454,7 @@
           const topGame = GAMES.playing[0]; // Grabs the first game in your Playing array
           document.getElementById("featured-name").textContent = topGame.title;
           document.getElementById("featured-img").src =
-            getImg(topGame.title) ||
+            getImg(topGame) ||
             "https://via.placeholder.com/120x160/1a1a2e/64748b?text=🎮";
           document.getElementById("featured-desc").textContent =
             `Currently playing ${topGame.title}. Dive back in and continue your journey!`;
@@ -1511,9 +1511,6 @@
           img: img || null,
         });
         save();
-        // Override img if provided
-        if (img) IGDB_COVERS[title] = img;
-        if (genre) GENRES[title] = genre;
         render();
         document.getElementById("modal-overlay").classList.remove("open");
         document.getElementById("new-title").value = "";
