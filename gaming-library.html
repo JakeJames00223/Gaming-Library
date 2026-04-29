@@ -1237,8 +1237,7 @@
         "Lords of the Fallen (2023)": "Soulslike RPG",
         "Crimson Desert": "Open World Action RPG",
       };
-
-      let GAMES = {
+      const DEFAULT_GAMES = {
         done: [
           { id: 1, title: "Resident Evil 2 Remake" },
           { id: 2, title: "Resident Evil 3 Remake" },
@@ -1302,6 +1301,11 @@
         ],
       };
 
+      const saved = localStorage.getItem("gaming-library");
+      let GAMES = saved ? JSON.parse(saved) : DEFAULT_GAMES;
+      function save() {
+        localStorage.setItem("gaming-library", JSON.stringify(GAMES));
+      }
       let nextId = 100;
       let activeFilter = "all";
       let searchQuery = "";
@@ -1399,7 +1403,7 @@
 
           // 3. Add it to the new list
           GAMES[newStatus].push(gameToMove);
-
+          save(); // Persist the change
           // 4. Re-render the UI so the card visually moves
           render();
         }
@@ -1506,6 +1510,7 @@
           genre: genre || "Action",
           img: img || null,
         });
+        save();
         // Override img if provided
         if (img) IGDB_COVERS[title] = img;
         if (genre) GENRES[title] = genre;
